@@ -36,13 +36,13 @@ class SimulatorRefineBoxInputs(unittest.TestCase):
     """
     valid1D = [
         dup({"refinement_boxes": {"L0": {"B0": [(10,), (14,)]}}}),
-        dup({"refinement_boxes": {"L0": {"B0": [(5,), (55,)]}}}),
+        dup({"refinement_boxes": {"L0": {"B0": [(2,), (12,)]}}}),
     ]
 
     invalid1D = [
-        dup({"max_nbr_levels": 1, "refinement_boxes": {"L0": {"B0": [(10,), (50,)]}}}),
-        dup({"cells": 55, "refinement_boxes": {"L0": {"B0": [(5,), (65,)]}}}),
-        dup({"smallest_patch_size": 100, "largest_patch_size": 64,}),
+        dup({"max_nbr_levels": 1, "refinement_boxes": {"L0": {"B0": [(2,), (12,)]}}}),
+        dup({"cells": 55, "refinement_boxes": {"L0": {"B0": [(5,), (15,)]}}}),
+        dup({"smallest_patch_size": 100, "largest_patch_size": 14,}),
         dup({"refined_particle_nbr": 1}),
     ]
 

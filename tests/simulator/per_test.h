@@ -111,6 +111,14 @@ using Simulators2d
 TYPED_TEST_SUITE(Simulator2dTest, Simulators2d);
 
 
+template<typename Simulator>
+struct Simulator3dTest : public ::testing::Test
+{
+};
+using Simulator3d
+    = testing::Types<TestSimulator<3, 1, 6>, TestSimulator<3, 2, 6>, TestSimulator<3, 3, 6>>;
+TYPED_TEST_SUITE(Simulator3dTest, Simulator3d);
+
 
 namespace PHARE
 {

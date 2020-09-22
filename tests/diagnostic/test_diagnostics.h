@@ -80,6 +80,21 @@ void checkField(HighFive::File& file, GridLayout& layout, Field& field, std::str
             }
         }
     }
+    else if constexpr (dim == 3)
+    {
+        for (std::size_t i = beg[0]; i < end[0]; i++)
+        {
+            for (std::size_t j = beg[1]; j < end[1]; j++)
+            {
+                for (std::size_t k = beg[2]; k < end[2]; k++)
+                {
+                    if (std::isnan(view(i, j, k)) || std::isnan(field(i, j, k)))
+                        throw std::runtime_error("This field should not be NaN");
+                    EXPECT_FLOAT_EQ(view(i, j, k), field(i, j, k));
+                }
+            }
+        }
+    }
     else
         throw std::runtime_error("Unhandled dimension");
 }
