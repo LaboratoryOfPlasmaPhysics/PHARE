@@ -156,6 +156,7 @@ class DiagnosticsTest(unittest.TestCase):
             ph.global_vars.sim = None
 
 
+
     @data(*_test_cases)
     def test_dump_diags_1d(self, simInput):
         self._test_dump_diags(1, **simInput)
@@ -164,6 +165,11 @@ class DiagnosticsTest(unittest.TestCase):
     @data(*_test_cases)
     def test_dump_diags_2d(self, simInput):
         self._test_dump_diags(2, **simInput)
+
+
+    @data(*_test_cases)
+    def test_dump_diags_3d(self, simInput):
+        self._test_dump_diags(3, **simInput)
 
 
     def tearDown(self):

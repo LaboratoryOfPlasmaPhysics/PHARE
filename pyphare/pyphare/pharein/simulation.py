@@ -187,6 +187,11 @@ valid_refined_particle_nbr = {
     1: [4, 5, 8, 9],
     2: [4, 5, 8, 9, 16],
     3: [4, 5, 8, 9, 25]
+  },
+  3: { # see https://github.com/PHAREHUB/PHARE/issues/232
+    1: [6, 12],
+    2: [6, 12],
+    3: [6, 12]
   }
 } # Default refined_particle_nbr per dim/interp is considered index 0 of list
 def check_refined_particle_nbr(dims, **kwargs):
@@ -211,7 +216,7 @@ def check_origin(dims, **kwargs):
 
 # ------------------------------------------------------------------------------
 
-def check_refinement_boxes(**kwargs):
+def check_refinement_boxes(dims, **kwargs):
     refinement_boxes = kwargs.get("refinement_boxes", None)
 
     if refinement_boxes is None:
@@ -235,6 +240,8 @@ def check_refinement_boxes(**kwargs):
         tmp_boxes = []
         if isinstance(boxes[0], (tuple,list)):
             for points in boxes:
+                if any([len(point) != dims for point in points]):
+                    raise ValueError("Refinement box dimension mismatch")
                 tmp_boxes.append(Box(points[0], points[1]))
             boxes = tmp_boxes
 
@@ -350,7 +357,7 @@ def checker(func):
         kwargs["largest_patch_size"] = largest
 
         kwargs["max_nbr_levels"] = kwargs.get('max_nbr_levels', 1)
-        kwargs["refinement_boxes"] = check_refinement_boxes(**kwargs)
+        kwargs["refinement_boxes"] = check_refinement_boxes(dims, **kwargs)
 
         return func(simulation_object, **kwargs)
 
