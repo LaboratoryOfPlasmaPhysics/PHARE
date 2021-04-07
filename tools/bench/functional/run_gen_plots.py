@@ -46,7 +46,7 @@ available_test_cases = find_test_case()
 
 # defaults that can be modified, or overridden by cli
 default_cli_args = {
-    "build_test": True,
+    "build": True,
     "test_cases": available_test_cases,  # None = scan "generated" dir and run all files to run all tests for said file
     "samrai_dir": None,  # None = ${root}/subprojects/samrai
     "cxx_flags": "-O3 -g3 -march=native -mtune=native",
@@ -55,7 +55,8 @@ default_cli_args = {
     "use_ninja": binary_exists_on_path("ninja"),
     "use_ccache": binary_exists_on_path("ccache"),
     "multithreaded": False,
-    "use_found_build_for_top": False,
+    "use_found_build_for_top": True,
+    "tools" : "perf" # csv list from cli possible tools [ perf, caliper ]
 }
 
 
@@ -64,11 +65,12 @@ def parse_cli_args():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--build_test",
-        default=default_cli_args["build_test"],
+        "--build",
+        default=default_cli_args["build"],
         type=strtobool,
         help="if True, builds and tests $build_top_N_commits times, useful if you have already built and just want to mess with plotting for each set of perf results",
     )
+    parser.add_argument("--tools", default=default_cli_args["tools"])
     parser.add_argument("--test_cases", default=default_cli_args["test_cases"])
     parser.add_argument("--samrai_dir", default=default_cli_args["samrai_dir"])
     parser.add_argument("--cxx_flags", default=default_cli_args["cxx_flags"])
@@ -102,6 +104,8 @@ def parse_cli_args():
     args = parser.parse_args()
     if isinstance(args.test_cases, str):
         args.test_cases = args.test_cases.split(",")
+    if isinstance(args.tools, str):
+        args.tools = args.tools.split(",")
     return vars(args)
 
 
@@ -156,7 +160,7 @@ def test_case_gen_dir(test_case):
     return os.path.join(this_dir, "generated", test_case)
 
 
-def run_tests(test_cases, cli_args, git_hash):
+def run_perf(test_cases, cli_args, git_hash):
     for test_case in test_cases:
         bin_dir = test_case_gen_dir(test_case)
         for file_name in scan_dir(bin_dir, files_only=True):
@@ -287,14 +291,13 @@ def cmake_clean_config_build(cli_args):
     os.chdir(str(root))
 
 
-def build_test(test_cases, cli_args, git_hash):
+def build(test_cases, cli_args, git_hash):
     git.checkout(git_hash)
     should_build = not cli_args["use_found_build_for_top"] or (
       current_git_hash == git_hash and not os.path.exists(str(build_dir))
     )
     if should_build:
         cmake_clean_config_build(cli_args)
-    run_tests(test_cases, cli_args, git_hash)
 
 
 def verify_cli_args(cli_args):
@@ -319,9 +322,53 @@ def generate_test_cases(test_cases):
         generate(test_case)
 
 
+def run_caliper(test_cases, cli_args, git_hash):
+    from tools.python3 import decode_bytes
+    from tools.python3.mpi import mpirun
+    import subprocess, resource
+    import importlib
+    import dill as dill
+
+    def cali_config(bindata_dir):
+        return f"runtime-report(output={os.path.join(str(bindata_dir), 'cali.log')})"
+
+    for test_case in test_cases:
+        bin_dir = test_case_gen_dir(test_case)
+        for file_name in scan_dir(bin_dir, files_only=True):
+            file_name, file_ext = os.path.splitext(file_name)
+            assert file_ext == ".py"
+            bindata_dir = test_file_data_dir(test_case, file_name, git_hash)
+            Path(bindata_dir).mkdir(parents=True, exist_ok=True)
+            py_file_module = py_file_to_module(bin_dir, file_name)
+            module = importlib.import_module(py_file_module)
+            mpirun_n = module.params.get("mpirun_n", 1)
+
+            with open(os.path.join(str(bindata_dir), 'params.pickle'), 'wb') as write_file:
+                dill.dump(module.params, write_file)
+
+            exe = perf_bin(py_file_module + file_ext)
+            env = os.environ
+            env["CALI_CONFIG"] = cali_config(bindata_dir)
+            usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
+            proc = mpirun(exe, mpirun_n, check=True, env=env,
+                stdout=subprocess.DEVNULL, # don't care
+                stderr=open(os.path.join(str(bindata_dir), "cali.err"), "w"))
+            usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)
+            cpu_time = usage_end.ru_utime - usage_start.ru_utime
+            with open(os.path.join(str(bindata_dir), 'cputime.log'), 'w') as write_file:
+                write_file.write(str(cpu_time))
+
+
+
+
 def main():
     cli_args = verify_cli_args(parse_cli_args())
-    perf.check()
+
+    if "perf" in cli_args["tools"]:
+        perf.check()
+
+    if "caliper" in cli_args["tools"]:
+        cmake_config_extra = f"{cmake_config_extra} -DwithCaliper"
 
     data_dir.mkdir(exist_ok=True)
     git_branch_reset_at_exit()
@@ -334,11 +381,14 @@ def main():
         out.write(git.log(build_top_N_commits + 10, use_short=True))
 
     hashes = git.hashes(build_top_N_commits)
-
     for git_hash in hashes:
-        if cli_args["build_test"]:
-            build_test(test_cases, cli_args, git_hash)
-        plot_gen(test_cases, cli_args, git_hash)
+        if cli_args["build"]:
+            build(test_cases, cli_args, git_hash)
+        if "perf" in cli_args["tools"]:
+            run_perf(test_cases, cli_args, git_hash)
+            plot_gen(test_cases, cli_args, git_hash)
+        if "caliper" in cli_args["tools"]:
+            run_caliper(test_cases, cli_args, git_hash)
 
 
 if __name__ == "__main__":
