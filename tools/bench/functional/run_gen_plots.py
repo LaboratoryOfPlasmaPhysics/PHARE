@@ -6,7 +6,7 @@ new test cases are identified by the file name, minus ".py" i.e. "uniform"
 
 example execution might be
 ```
-export PYTHONPATH=$PWD/build:$PWD/pyphare
+export PYTHONPATH=$PWD/build:$PWD/pyphare:$PWD
 python3 -u tools/bench/functional/run_gen_plots.py --samrai_dir=/mkn/r/llnl/samrai/master
 
 ```
@@ -343,7 +343,7 @@ def run_caliper(test_cases, cli_args, git_hash):
             module = importlib.import_module(py_file_module)
             mpirun_n = module.params.get("mpirun_n", 1)
 
-            with open(os.path.join(str(bindata_dir), 'params.pickle'), 'wb') as write_file:
+            with open(os.path.join(str(bindata_dir), 'params.dill'), 'wb') as write_file:
                 dill.dump(module.params, write_file)
 
             exe = perf_bin(py_file_module + file_ext)
@@ -366,9 +366,6 @@ def main():
 
     if "perf" in cli_args["tools"]:
         perf.check()
-
-    if "caliper" in cli_args["tools"]:
-        cmake_config_extra = f"{cmake_config_extra} -DwithCaliper"
 
     data_dir.mkdir(exist_ok=True)
     git_branch_reset_at_exit()
