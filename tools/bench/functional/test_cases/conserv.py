@@ -11,7 +11,7 @@ gen_path = os.path.join(os.path.dirname(__file__), f'../generated/{this_file_nam
 dl = 0.25
 final_time = 1
 mpirun_Ns = [1, 10]
-largest_patch_sizes = [5, 10, 50, 100, 200, 400, 800, 1600]
+patch_sizes = [5, 10, 50, 100, 200, 400, 800, 1600]
 time_step = .01
 cells = 1600
 ppc_list = [111, 1111, 2222, 3333]
@@ -19,7 +19,7 @@ interps = [1, 2, 3]
 ndims = supported_dimensions()
 vth = { f"vth{xyz}" : lambda *xyz: .3 for xyz in "xyz"}
 
-def generate(ndim, interp, ppc, mpirun_n, largest_patch_size):
+def generate(ndim, interp, ppc, mpirun_n, patch_size):
     """
       Params may include functions for the default population "protons"
          see: simulation_setup.py::setup for all available dict keys
@@ -27,7 +27,7 @@ def generate(ndim, interp, ppc, mpirun_n, largest_patch_size):
          simulation_setup.setup doesn't even have to be used, any job.py style file is allowed
          A "params" dict must exist for exporting test case information
     """
-    file_name = f"{ndim}_{interp}_{ppc}_{mpirun_n}_{largest_patch_size}"
+    file_name = f"{ndim}_{interp}_{ppc}_{mpirun_n}_{patch_size}"
     with open(os.path.join(gen_path, file_name + ".py"), "w") as out:
         out.write("""
 import numpy as np
@@ -38,7 +38,8 @@ params = {""" + f"""
     "ndim"                : {ndim},
     "interp_order"        : {interp},
     "ppc"                 : {ppc},
-    "largest_patch_size"  : {largest_patch_size},
+    "smallest_patch_size" : {patch_size},
+    "largest_patch_size"  : {patch_size},
     "cells"               : conserv.cells,
     "time_step"           : conserv.time_step,
     "dl"                  : conserv.dl,
@@ -63,7 +64,7 @@ def generate_all(clean=True):
         shutil.rmtree(str(gen_dir))
     gen_dir.mkdir(parents=True, exist_ok=True)
     import itertools
-    permutations = itertools.product(ndims, interps, ppc_list, mpirun_Ns, largest_patch_sizes)
+    permutations = itertools.product(ndims, interps, ppc_list, mpirun_Ns, patch_sizes)
     for permutation in permutations:
         generate(*permutation)
 

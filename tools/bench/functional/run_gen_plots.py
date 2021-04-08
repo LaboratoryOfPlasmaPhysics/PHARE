@@ -183,7 +183,7 @@ def run_perf(test_cases, cli_args, git_hash):
             perf.record(exe, perf_events, os.path.join(bindata_dir, "record.data"))
 
 
-def parse_test_results(test_case, cli_args, git_hash):
+def parse_perf_test_results(test_case, cli_args, git_hash):
     import importlib
     results = {}
     bin_dir = test_case_gen_dir(test_case)
@@ -204,14 +204,14 @@ def parse_test_results(test_case, cli_args, git_hash):
     return results
 
 
-def retrieve_results(test_cases, cli_args, git_hash):
+def retrieve_perf_results(test_cases, cli_args, git_hash):
     """
     returns {"uniform" : {
       "uniform_1_1_256_11" : {"stat_data" : stat_data_files_list, "params" : params_for_file_dict}}}
     """
 
     return {
-        test_case: parse_test_results(test_case, cli_args, git_hash)
+        test_case: parse_perf_test_results(test_case, cli_args, git_hash)
         for test_case in test_cases
     }
 
@@ -249,8 +249,8 @@ def plot_scatter(test_case, cli_args, file_results, getter, type, git_hash):
     fig.savefig(out, bbox_extra_artists=(lgd,), bbox_inches="tight")
 
 
-def plot_gen(test_cases, cli_args, git_hash):
-    case_results = retrieve_results(test_cases, cli_args, git_hash)
+def plot_perf(test_cases, cli_args, git_hash):
+    case_results = retrieve_perf_results(test_cases, cli_args, git_hash)
     for test_case, file_results in case_results.items():
         plot_scatter(
             test_case,
@@ -360,6 +360,18 @@ def run_caliper(test_cases, cli_args, git_hash):
 
 
 
+def plot_caliper(test_cases, cli_args, git_hash):
+    import tools.python3.caliper as caliper
+    results = {}
+    for test_case in test_cases:
+        bin_dir = test_case_gen_dir(test_case)
+        for file_name in scan_dir(bin_dir, files_only=True):
+            file_name, file_ext = os.path.splitext(file_name)
+            bindata_dir = test_file_data_dir(test_case, file_name, git_hash)
+            results[file_name] = caliper.parse_tab_hier_file(os.path.join(str(bindata_dir), "cali.log"))
+
+
+
 
 def main():
     cli_args = verify_cli_args(parse_cli_args())
@@ -383,9 +395,10 @@ def main():
             build(test_cases, cli_args, git_hash)
         if "perf" in cli_args["tools"]:
             run_perf(test_cases, cli_args, git_hash)
-            plot_gen(test_cases, cli_args, git_hash)
+            plot_perf(test_cases, cli_args, git_hash)
         if "caliper" in cli_args["tools"]:
             run_caliper(test_cases, cli_args, git_hash)
+            # plot_caliper(test_cases, cli_args, git_hash)
 
 
 if __name__ == "__main__":
