@@ -301,10 +301,8 @@ def build(test_cases, cli_args, git_hash):
 
 
 def verify_cli_args(cli_args):
-
     for key in list(default_cli_args.keys()):
-        assert key in cli_args
-
+        assert key in cli_args, f"{key} is not a valid cli arg"
     assert len(cli_args["test_cases"]) > 0
     assert cli_args["build_top_N_commits"] > 0
     return cli_args
@@ -350,7 +348,7 @@ def run_caliper(test_cases, cli_args, git_hash):
             env = os.environ
             env["CALI_CONFIG"] = cali_config(bindata_dir)
             usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
-            proc = mpirun(exe, mpirun_n, check=True, env=env,
+            mpirun(exe, mpirun_n, check=True, env=env,
                 stdout=subprocess.DEVNULL, # don't care
                 stderr=open(os.path.join(str(bindata_dir), "cali.err"), "w"))
             usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)
@@ -397,8 +395,8 @@ def main():
             run_perf(test_cases, cli_args, git_hash)
             plot_perf(test_cases, cli_args, git_hash)
         if "caliper" in cli_args["tools"]:
-            run_caliper(test_cases, cli_args, git_hash)
-            # plot_caliper(test_cases, cli_args, git_hash)
+            # run_caliper(test_cases, cli_args, git_hash)
+            plot_caliper(test_cases, cli_args, git_hash)
 
 
 if __name__ == "__main__":
