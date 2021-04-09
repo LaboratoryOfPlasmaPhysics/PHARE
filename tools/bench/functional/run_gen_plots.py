@@ -140,7 +140,7 @@ def git_branch_reset_at_exit():
         git.checkout(current_git_branch)
 
 
-def perf_bin(pyfile):
+def phare_exec_job_string(pyfile):
     return phare_exe + f" {pyfile}"
 
 
@@ -169,7 +169,7 @@ def run_perf(test_cases, cli_args, git_hash):
             bindata_dir = test_file_data_dir(test_case, file_name, git_hash)
             Path(bindata_dir).mkdir(parents=True, exist_ok=True)
             py_file_module = py_file_to_module(bin_dir, file_name)
-            exe = perf_bin(py_file_module + file_ext)
+            exe = phare_exec_job_string(py_file_module + file_ext)
             outs = [
                 os.path.join(bindata_dir, f"{repeat}.data")
                 for repeat in range(cli_args["repeat_stat"])
@@ -320,15 +320,16 @@ def generate_test_cases(test_cases):
         generate(test_case)
 
 
-def run_caliper(test_cases, cli_args, git_hash):
+
+def run_caliper(test_cases, cli_args, git_hash, mode=0):
     from tools.python3 import decode_bytes
     from tools.python3.mpi import mpirun
-    import subprocess, resource
-    import importlib
-    import dill as dill
+    import importlib, subprocess, resource, dill as dill, hatchet as ht
 
-    def cali_config(bindata_dir):
-        return f"runtime-report(output={os.path.join(str(bindata_dir), 'cali.log')})"
+    modes = [
+      "report,event,trace,timestamp,recorder",  # light
+      "alloc,aggregate,cpuinfo,memusage,debug,env,event,loop_monitor,region_monitor,textlog,io,pthread,sysalloc,recorder,report,timestamp,statistics,spot,trace,validator,mpi,mpireport,mpiflush", # heavy
+    ]
 
     for test_case in test_cases:
         bin_dir = test_case_gen_dir(test_case)
@@ -339,23 +340,30 @@ def run_caliper(test_cases, cli_args, git_hash):
             Path(bindata_dir).mkdir(parents=True, exist_ok=True)
             py_file_module = py_file_to_module(bin_dir, file_name)
             module = importlib.import_module(py_file_module)
-            mpirun_n = module.params.get("mpirun_n", 1)
-
             with open(os.path.join(str(bindata_dir), 'params.dill'), 'wb') as write_file:
                 dill.dump(module.params, write_file)
-
-            exe = perf_bin(py_file_module + file_ext)
-            env = os.environ
-            env["CALI_CONFIG"] = cali_config(bindata_dir)
+            exe = phare_exec_job_string(py_file_module + file_ext)
+            env = os.environ.copy()
+            env["CALI_SERVICES_ENABLE"] = modes[mode]
+            env["CALI_REPORT_FILENAME"] = f"{os.path.join(str(bindata_dir), 'func_times.json')}"
+            env["CALI_REPORT_CONFIG"] = "SELECT function,time.duration ORDER BY time.duration FORMAT json"
+            env["CALI_RECORDER_FILENAME"] = f"{os.path.join(str(bindata_dir), 'recorder.cali')}"
             usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
-            mpirun(exe, mpirun_n, check=True, env=env,
-                stdout=subprocess.DEVNULL, # don't care
+            mpirun(exe, module.params.get("mpirun_n", 1), check=True, env=env, stdout=subprocess.DEVNULL,
                 stderr=open(os.path.join(str(bindata_dir), "cali.err"), "w"))
             usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)
             cpu_time = usage_end.ru_utime - usage_start.ru_utime
             with open(os.path.join(str(bindata_dir), 'cputime.log'), 'w') as write_file:
                 write_file.write(str(cpu_time))
-
+            # grouping_attribute = "function"
+            # default_metric = "sum(sum#time.duration),inclusive_sum(sum#time.duration)"
+            # query = "select function,%s group by %s format json-split" % (
+            #     default_metric,
+            #     grouping_attribute,
+            # )
+            # gf = ht.GraphFrame.from_caliper(env["CALI_RECORDER_FILENAME"], query)
+            # print(gf.dataframe)
+            # sys.exit(1)
 
 
 def plot_caliper(test_cases, cli_args, git_hash):
@@ -395,7 +403,7 @@ def main():
             run_perf(test_cases, cli_args, git_hash)
             plot_perf(test_cases, cli_args, git_hash)
         if "caliper" in cli_args["tools"]:
-            # run_caliper(test_cases, cli_args, git_hash)
+            run_caliper(test_cases, cli_args, git_hash)
             plot_caliper(test_cases, cli_args, git_hash)
 
 

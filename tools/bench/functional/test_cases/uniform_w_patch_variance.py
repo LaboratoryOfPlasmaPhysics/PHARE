@@ -1,3 +1,9 @@
+"""
+
+  This test case is for assessing the impact of copy/stream for various patch size and parameter sets
+
+"""
+
 import os
 import numpy as np
 from pathlib import Path
@@ -31,7 +37,7 @@ def generate(ndim, interp, ppc, mpirun_n, patch_size):
     with open(os.path.join(gen_path, file_name + ".py"), "w") as out:
         out.write("""
 import numpy as np
-import tools.bench.functional.test_cases.conserv as conserv # scary
+import tools.bench.functional.test_cases.uniform_w_patch_variance as inputs # scary
 
 params = {""" + f"""
     "mpirun_n"            : {mpirun_n},
@@ -40,11 +46,11 @@ params = {""" + f"""
     "ppc"                 : {ppc},
     "smallest_patch_size" : {patch_size},
     "largest_patch_size"  : {patch_size},
-    "cells"               : conserv.cells,
-    "time_step"           : conserv.time_step,
-    "dl"                  : conserv.dl,
-    "final_time"          : conserv.final_time,
-    **conserv.vth,
+    "cells"               : inputs.cells,
+    "time_step"           : inputs.time_step,
+    "dl"                  : inputs.dl,
+    "final_time"          : inputs.final_time,
+    **inputs.vth,
 """ + """
 }
 
