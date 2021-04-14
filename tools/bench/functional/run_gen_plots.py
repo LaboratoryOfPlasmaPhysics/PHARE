@@ -126,6 +126,7 @@ stat_events = perf_events + ["bus-cycles"]
 phare_exe = "build/src/phare/phare-exe"
 build_dir = Path(os.path.join(str(root), "build"))
 data_dir = Path(os.path.join(str(root), "data_out"))
+data_tmp = Path(os.path.join(str(root), "data_tmp"))
 cmake_config_user = "-DdevMode=ON -DCMAKE_BUILD_TYPE=Release"
 
 # not to be changed!
@@ -155,6 +156,10 @@ def git_commit_data_dir(git_hash):
 def test_file_data_dir(test_case, test_file, git_hash):
     return os.path.join(git_commit_data_dir(git_hash), test_case, test_file)
 
+# not to be included as artifacts
+def test_file_tmp_dir(test_case, test_file, git_hash):
+    return os.path.join(str(data_tmp), git_hash, test_case, test_file)
+
 
 def test_case_gen_dir(test_case):
     return os.path.join(this_dir, "generated", test_case)
@@ -179,8 +184,9 @@ def run_perf(test_cases, cli_args, git_hash):
             else:
                 for out in outs:
                     perf.stat(exe, stat_events, out)
-
             perf.record(exe, perf_events, os.path.join(bindata_dir, "record.data"))
+
+    plot_perf(test_cases, cli_args, git_hash)
 
 
 def parse_perf_test_results(test_case, cli_args, git_hash):
@@ -319,12 +325,16 @@ def generate_test_cases(test_cases):
             raise RuntimeError(f"test_case ({test_case}) does not exist in subdirectory {test_cases_dir}")
         generate(test_case)
 
+def caliper_func_times_json(tmpdata_dir):
+    return f"{os.path.join(tmpdata_dir, 'func_times.json')}"
 
+def caliper_recorder_cali(tmpdata_dir):
+    return f"{os.path.join(tmpdata_dir, 'recorder.cali')}"
 
 def run_caliper(test_cases, cli_args, git_hash, mode=0):
     from tools.python3 import decode_bytes
     from tools.python3.mpi import mpirun
-    import importlib, subprocess, resource, dill as dill, hatchet as ht
+    import importlib, subprocess, resource, dill as dill
 
     modes = [
       "report,event,trace,timestamp,recorder",  # light
@@ -337,6 +347,7 @@ def run_caliper(test_cases, cli_args, git_hash, mode=0):
             file_name, file_ext = os.path.splitext(file_name)
             assert file_ext == ".py"
             bindata_dir = test_file_data_dir(test_case, file_name, git_hash)
+            tmpdata_dir = test_file_tmp_dir(test_case, file_name, git_hash)
             Path(bindata_dir).mkdir(parents=True, exist_ok=True)
             py_file_module = py_file_to_module(bin_dir, file_name)
             module = importlib.import_module(py_file_module)
@@ -345,9 +356,9 @@ def run_caliper(test_cases, cli_args, git_hash, mode=0):
             exe = phare_exec_job_string(py_file_module + file_ext)
             env = os.environ.copy()
             env["CALI_SERVICES_ENABLE"] = modes[mode]
-            env["CALI_REPORT_FILENAME"] = f"{os.path.join(str(bindata_dir), 'func_times.json')}"
+            env["CALI_REPORT_FILENAME"] = caliper_func_times_json(tmpdata_dir)
             env["CALI_REPORT_CONFIG"] = "SELECT function,time.duration ORDER BY time.duration FORMAT json"
-            env["CALI_RECORDER_FILENAME"] = f"{os.path.join(str(bindata_dir), 'recorder.cali')}"
+            env["CALI_RECORDER_FILENAME"] = caliper_recorder_cali(tmpdata_dir)
             usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
             mpirun(exe, module.params.get("mpirun_n", 1), check=True, env=env, stdout=subprocess.DEVNULL,
                 stderr=open(os.path.join(str(bindata_dir), "cali.err"), "w"))
@@ -355,28 +366,19 @@ def run_caliper(test_cases, cli_args, git_hash, mode=0):
             cpu_time = usage_end.ru_utime - usage_start.ru_utime
             with open(os.path.join(str(bindata_dir), 'cputime.log'), 'w') as write_file:
                 write_file.write(str(cpu_time))
-            # grouping_attribute = "function"
-            # default_metric = "sum(sum#time.duration),inclusive_sum(sum#time.duration)"
-            # query = "select function,%s group by %s format json-split" % (
-            #     default_metric,
-            #     grouping_attribute,
-            # )
-            # gf = ht.GraphFrame.from_caliper(env["CALI_RECORDER_FILENAME"], query)
-            # print(gf.dataframe)
-            # sys.exit(1)
+#     plot_caliper(test_cases, cli_args, git_hash)
 
-
-def plot_caliper(test_cases, cli_args, git_hash):
-    import tools.python3.caliper as caliper
-    results = {}
-    for test_case in test_cases:
-        bin_dir = test_case_gen_dir(test_case)
-        for file_name in scan_dir(bin_dir, files_only=True):
-            file_name, file_ext = os.path.splitext(file_name)
-            bindata_dir = test_file_data_dir(test_case, file_name, git_hash)
-            results[file_name] = caliper.parse_tab_hier_file(os.path.join(str(bindata_dir), "cali.log"))
-
-
+# def plot_caliper(test_cases, cli_args, git_hash):
+#     import tools.python3.caliper as caliper
+#     for test_case in test_cases:
+#         bin_dir = test_case_gen_dir(test_case)
+#         for file_name in scan_dir(bin_dir, files_only=True):
+#             pass
+#             file_name, file_ext = os.path.splitext(file_name)
+#             tmpdata_dir = test_file_tmp_dir(test_case, file_name, git_hash)
+#             func_times_json = caliper_func_times_json(tmpdata_dir)
+#             recorder_cali = caliper_recorder_cali(tmpdata_dir)
+#             caliper.hatchet_on_caliper(recorder_cali)
 
 
 def main():
@@ -401,10 +403,8 @@ def main():
             build(test_cases, cli_args, git_hash)
         if "perf" in cli_args["tools"]:
             run_perf(test_cases, cli_args, git_hash)
-            plot_perf(test_cases, cli_args, git_hash)
         if "caliper" in cli_args["tools"]:
             run_caliper(test_cases, cli_args, git_hash)
-            plot_caliper(test_cases, cli_args, git_hash)
 
 
 if __name__ == "__main__":
