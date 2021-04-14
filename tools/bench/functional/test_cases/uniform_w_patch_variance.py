@@ -16,12 +16,12 @@ gen_path = os.path.join(os.path.dirname(__file__), f'../generated/{this_file_nam
 ### test permutation section - minimized is best ###
 dl = 0.25
 final_time = 1
-mpirun_Ns = [1, 10]
-patch_sizes = [5, 10, 50, 100, 200, 400, 800, 1600]
+mpirun_Ns = [1] # , 10]
+patch_sizes = [100] # [5, 10, 50, 100, 200, 400, 800, 1600]
 time_step = .01
-cells = 1600
-ppc_list = [111, 1111, 2222, 3333]
-interps = [1, 2, 3]
+cells = 160000
+ppc_list = [111]
+interps = [1] #, 2, 3]
 ndims = supported_dimensions()
 vth = { f"vth{xyz}" : lambda *xyz: .3 for xyz in "xyz"}
 

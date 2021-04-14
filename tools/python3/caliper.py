@@ -8,5 +8,7 @@ def hatchet_on_caliper(filepath):
         default_metric,
         grouping_attribute,
     )
+
+    query = "SELECT function,time.duration ORDER BY time.duration FORMAT json-split"
     gf = ht.GraphFrame.from_caliper(filepath, query)
     print(gf.dataframe)
