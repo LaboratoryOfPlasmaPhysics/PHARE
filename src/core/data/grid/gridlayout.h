@@ -1215,7 +1215,7 @@ namespace core
          */
         auto constexpr static nbrDualGhosts_()
         {
-            std::uint32_t constexpr nbrMinGhost{5};
+            std::uint32_t constexpr nbrMinGhost{4};
 
             return max<static_cast<std::uint32_t>((interp_order + 1) / 2.), nbrMinGhost>();
         }
@@ -1232,7 +1232,7 @@ namespace core
          */
         auto constexpr static nbrPrimalGhosts_()
         {
-            std::uint32_t constexpr nbrMinGhost{5};
+            std::uint32_t constexpr nbrMinGhost{4};
             if constexpr (interp_order == 1)
             {
                 return max<nbrDualGhosts_(), nbrMinGhost>();
