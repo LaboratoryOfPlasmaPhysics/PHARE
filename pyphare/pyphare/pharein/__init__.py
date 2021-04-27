@@ -119,6 +119,7 @@ def populateDict():
     add_int("simulation/time_step_nbr", simulation.time_step_nbr)
 
 
+    add_string("simulation/AMR/clustering", simulation.clustering)
     add_int("simulation/AMR/max_nbr_levels", simulation.max_nbr_levels)
     add_int("simulation/AMR/nesting_buffer", simulation.nesting_buffer)
     refinement_boxes = simulation.refinement_boxes

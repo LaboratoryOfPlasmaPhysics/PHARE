@@ -2,21 +2,6 @@
 #ifndef PHARE_AMR_INCLUDE_H
 #define PHARE_AMR_INCLUDE_H
 
-#include <SAMRAI/algs/TimeRefinementIntegrator.h>
-#include <SAMRAI/geom/CartesianGridGeometry.h>
-#include <SAMRAI/hier/Box.h>
-#include <SAMRAI/hier/BoxContainer.h>
-#include <SAMRAI/hier/IntVector.h>
-#include <SAMRAI/hier/PatchHierarchy.h>
-#include <SAMRAI/mesh/BergerRigoutsos.h>
-#include <SAMRAI/mesh/GriddingAlgorithm.h>
-#include <SAMRAI/mesh/StandardTagAndInitialize.h>
-#include <SAMRAI/mesh/TreeLoadBalancer.h>
-#include <SAMRAI/tbox/Database.h>
-#include <SAMRAI/tbox/DatabaseBox.h>
-#include <SAMRAI/tbox/InputManager.h>
-#include <SAMRAI/tbox/MemoryDatabase.h>
-
 #include "phare_core.h"
 #include "amr/amr_constants.h"
 #include "amr/types/amr_types.h"
