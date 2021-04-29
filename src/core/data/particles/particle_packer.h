@@ -10,6 +10,13 @@
 
 namespace PHARE::core
 {
+// PGI compiler doesn't (didn't at least) like static initializations of arrays, would result in an
+//  empty string
+inline std::array<std::string, 5> packer_keys()
+{
+    return {"weight", "charge", "iCell", "delta", "v"};
+}
+
 template<std::size_t dim>
 class ParticlePacker
 {
@@ -30,8 +37,6 @@ public:
         Particle<dim> particle;
         return get(particle);
     }
-
-    static auto& keys() { return keys_; }
 
     auto get(std::size_t i) const { return get(particles_[i]); }
     bool hasNext() const { return it_ < particles_.size(); }
@@ -55,10 +60,10 @@ public:
         }
     }
 
+
 private:
     ParticleArray<dim> const& particles_;
     std::size_t it_ = 0;
-    static inline std::array<std::string, 5> keys_{"weight", "charge", "iCell", "delta", "v"};
 };
 
 

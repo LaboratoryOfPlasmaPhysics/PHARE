@@ -30,6 +30,8 @@ if(HighFive)
   set(HIGHFIVE_UNIT_TESTS OFF) # silence warning
   set(HIGHFIVE_USE_BOOST OFF)
   set(HIGHFIVE_BUILD_DOCS OFF) # conflicts with phare doc target
+  set(HIGHFIVE_EXAMPLES OFF)
+  set(HIGHFIVE_PARALLEL_HDF5 ON) # causes failure if cannot occure
   add_subdirectory(${HIGHFIVE_SRC})
 
   message("HighFive enabled - checking HDF5")
