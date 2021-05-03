@@ -17,18 +17,26 @@ h5_weak_refs = {}
 
 def clean_dead_h5_weak_refs():
     for object_id, h5_weak_ref in h5_weak_refs.copy().items():
-        if h5_weak_ref() is None:
+        if h5_weak_ref["ref"]() is None:
             del h5_weak_refs[object_id]
 
-def add_h5_weak_ref(h5File):
+def add_h5_weak_ref(h5Filepath, h5File):
+    import pathlib, datetime, time
     clean_dead_h5_weak_refs()
-    h5_weak_refs[id(h5File)] = weakref.ref(h5File)
+
+    h5_weak_refs[id(h5File)] = {
+      "ref": weakref.ref(h5File), "access": int(time.time()),
+      "path": int(pathlib.Path(h5Filepath).stat().st_mtime)}
 
 @exit_register
 def close_h5_files_refs():
-    for h5_weak_ref in list(h5_weak_refs.values()):
-        if h5_weak_ref() is not None and h5_weak_ref().__bool__():
-            h5_weak_ref().close()
+    import pathlib, datetime, time
+    for h5_weak_ref_dict in list(h5_weak_refs.values()):
+        h5_weak_ref = h5_weak_ref_dict["ref"]
+        if h5_weak_ref() is not None:
+            mtime = int(h5_weak_ref_dict["path"].stat().st_mtime)
+            if mtime > h5_weak_ref_dict["access"] and h5_weak_ref().__bool__():
+                h5_weak_ref().close()
 
 
 
@@ -899,7 +907,7 @@ h5_time_grp_key = "t"
 def hierarchy_fromh5(h5_filename, time, hier, silent=True):
     import h5py
     data_file = h5py.File(h5_filename, "r")
-    add_h5_weak_ref(data_file)
+    add_h5_weak_ref(h5_filename, data_file)
     basename = os.path.basename(h5_filename)
 
     root_cell_width = np.asarray(data_file.attrs["cell_width"])
