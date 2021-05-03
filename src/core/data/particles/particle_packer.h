@@ -10,10 +10,11 @@
 
 namespace PHARE::core
 {
-// PGI compiler doesn't (didn't at least) like static initializations of arrays, would result in an
-//  empty string
+// PGI compiler (nvc++ 21.3-0) doesn't like static initializations of arrays,
+//   would result in empty strings
 inline std::array<std::string, 5> packer_keys()
 {
+    // The order of this array must match the tuple order of ParticlePacker::get(particle)
     return {"weight", "charge", "iCell", "delta", "v"};
 }
 

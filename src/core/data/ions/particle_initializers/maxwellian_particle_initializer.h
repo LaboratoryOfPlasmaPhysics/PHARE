@@ -57,8 +57,7 @@ public:
 
 
     /**
-     * @brief load pacore
-} // namespace PHARErticles in a ParticleArray in a domain defined by the given layout
+     * @brief load particles in a ParticleArray in a domain defined by the given layout
      */
     void loadParticles(ParticleArray& particles, GridLayout const& layout) const override;
 

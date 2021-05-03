@@ -534,7 +534,7 @@ namespace core
             auto indexAndWeightDual = [this, &layout](auto const& part) {
                 for (auto iDim = 0u; iDim < dimension; ++iDim)
                 {
-                    auto iCell           = layout.AMRToLocal(part.iCell);
+                    auto iCell           = layout.AMRToLocal(Point<int, dim>{part.iCell});
                     double normalizedPos = iCell[iDim] + part.delta[iDim] + dualOffset(interpOrder);
 
                     startIndex_[centering2int(QtyCentering::dual)][iDim]
@@ -550,7 +550,7 @@ namespace core
             auto indexAndWeightPrimal = [this, &layout](auto const& part) {
                 for (auto iDim = 0u; iDim < dimension; ++iDim)
                 {
-                    auto iCell           = layout.AMRToLocal(part.iCell);
+                    auto iCell           = layout.AMRToLocal(Point<int, dim>{part.iCell});
                     double normalizedPos = iCell[iDim] + part.delta[iDim];
 
                     startIndex_[centering2int(QtyCentering::primal)][iDim]
@@ -623,7 +623,7 @@ namespace core
             auto indexAndWeightDual = [this, &layout](auto const& part) {
                 for (auto iDim = 0u; iDim < dimension; ++iDim)
                 {
-                    auto iCell           = layout.AMRToLocal(part.iCell);
+                    auto iCell           = layout.AMRToLocal(Point<int, dim>{part.iCell});
                     double normalizedPos = iCell[iDim] + part.delta[iDim] + dualOffset(interpOrder);
 
                     startIndex_[centering2int(QtyCentering::dual)][iDim]
@@ -639,7 +639,7 @@ namespace core
             auto indexAndWeightPrimal = [this, &layout](auto const& part) {
                 for (auto iDim = 0u; iDim < dimension; ++iDim)
                 {
-                    auto iCell           = layout.AMRToLocal(part.iCell);
+                    auto iCell           = layout.AMRToLocal(Point<int, dim>{part.iCell});
                     double normalizedPos = iCell[iDim] + part.delta[iDim];
 
                     startIndex_[centering2int(QtyCentering::primal)][iDim]

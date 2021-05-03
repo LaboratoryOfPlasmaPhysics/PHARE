@@ -22,8 +22,6 @@
 #      if level >= PHARE_EXEC_LEVEL_MIN AND level <= PHARE_EXEC_LEVEL_MAX
 #
 
-# this define breaks pgcc / and appears unnecessary
-# sed -i 's/# define GTEST_CAN_STREAM_RESULTS_ 1/# define GTEST_CAN_STREAM_RESULTS_ 0/g' subprojects/googletest/googletest/include/gtest/internal/gtest-port.h
 
 if (test AND ${PHARE_EXEC_LEVEL_MIN} GREATER 0) # 0 = no tests
 
@@ -36,6 +34,7 @@ if (test AND ${PHARE_EXEC_LEVEL_MIN} GREATER 0) # 0 = no tests
 
   function(set_exe_paths_ binary)
     set_property(TEST ${binary}        PROPERTY ENVIRONMENT "PYTHONPATH=${PHARE_PYTHONPATH}")
+    set_property(TEST ${binary} APPEND PROPERTY ENVIRONMENT "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}")
   endfunction(set_exe_paths_)
 
   function(add_phare_test_ binary)
