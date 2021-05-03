@@ -1,16 +1,15 @@
 
-from pyphare.cpp import cpp_lib
-cpp = cpp_lib()
+from pybindlibs import cpp
 
 from pyphare.simulator.simulator import Simulator, startMPI
 from pyphare.pharesee.hierarchy import hierarchy_from, merge_particles
 from pyphare.pharein import MaxwellianFluidModel
 from pyphare.pharein.diagnostics import ParticleDiagnostics, FluidDiagnostics, ElectromagDiagnostics
 from pyphare.pharein import ElectronModel
-from pyphare.pharein.simulation import Simulation, supported_dimensions
+from pyphare.pharein.simulation import Simulation
 from pyphare.pharesee.geometry import level_ghost_boxes, hierarchy_overlaps
 from pyphare.core.gridlayout import yee_element_is_primal
-from pyphare.pharesee.particles import aggregate as aggregate_particles, any_assert as particles_any_assert
+from pyphare.pharesee.particles import aggregate as aggregate_particles
 import pyphare.core.box as boxm
 from pyphare.core.box import Box, Box1D
 import numpy as np
@@ -18,6 +17,7 @@ import unittest
 from ddt import ddt, data, unpack
 
 
+# AdvanceTest.test_field_level_ghosts_via_subcycles_and_coarser_interpolation_1
 
 @ddt
 class AdvanceTest(unittest.TestCase):
@@ -30,6 +30,9 @@ class AdvanceTest(unittest.TestCase):
                      smallest_patch_size=5, largest_patch_size=20,
                      cells=120, time_step=0.001, model_init={},
                      dl=0.1, extra_diag_options={}, time_step_nbr=1, timestamps=None):
+
+        # not to conflict with test_advance.py
+        diag_outputs = f"kirov_{diag_outputs}"
 
         from pyphare.pharein import global_vars
         global_vars.sim = None
@@ -46,6 +49,7 @@ class AdvanceTest(unittest.TestCase):
             dl=dl,
             interp_order=interp_order,
             refinement_boxes=refinement_boxes,
+            particle_pusher="kirov",
             diag_options={"format": "phareh5",
                           "options": extra_diag_options}
         )
@@ -76,13 +80,13 @@ class AdvanceTest(unittest.TestCase):
             return 1/density(x)*(K - b2(x)*0.5)
 
         def vx(x):
-            return 0.1
+            return 0.
 
         def vy(x):
-            return 0.1
+            return 0.
 
         def vz(x):
-            return 0.1
+            return 0.
 
         def vthx(x):
             return T(x)
@@ -135,7 +139,7 @@ class AdvanceTest(unittest.TestCase):
                                     write_timestamps=timestamps,
                                     population_name=pop)
 
-        Simulator(global_vars.sim).run()
+        Simulator(global_vars.sim).initialize().run()
 
         eb_hier = None
         if qty in ["e", "eb"]:
@@ -394,73 +398,21 @@ class AdvanceTest(unittest.TestCase):
                         idx1 = np.argsort(part1.iCells + part1.deltas)
                         idx2 = np.argsort(part2.iCells + part2.deltas)
 
-                        # if there is an overlap, there should be particles in these cells
+                        # if there is an overlap, there should be particles
+                        # in these cells
                         assert(len(idx1) >0)
                         assert(len(idx2) >0)
-                        assert(len(idx1) == len(idx2))
 
                         print("respectively {} and {} in overlaped patchdatas".format(len(idx1), len(idx2)))
 
                         # particle iCells are in their patch AMR space
                         # so we need to shift them by +offset to move them to the box space
-
-                        # find difference in case of duplicates
-                        tmp = (part1.v[idx1,0] - part2.v[idx2,0])
-                        cell = np.where(tmp > 0)[0]
-                        duplicate_found = len(cell)
-                        if duplicate_found:
-                            cell = cell[0]
-
-                            assert dim == 1, "not sure this works in 2d"
-                            def pop_indicis(parts, idx):
-                                return parts.pop(np.unique(np.concatenate(
-                                  np.asarray([np.where(parts.deltas == part_delta)[0] for part_delta in [
-                                      parts.deltas[idx][cell - 1], parts.deltas[idx][cell], parts.deltas[idx][cell + 1]
-                                ]])).ravel()))
-
-                            particles_any_assert(pop_indicis(part1, idx1), pop_indicis(part2, idx2))
-
-                            # redo after removing indexes
-                            idx1 = np.argsort(part1.iCells + part1.deltas)
-                            idx2 = np.argsort(part2.iCells + part2.deltas)
-
                         np.testing.assert_array_equal(part1.iCells[idx1]+offsets[0], part2.iCells[idx2]+offsets[1])
-                        np.testing.assert_allclose(part1.deltas[idx1], part2.deltas[idx2], atol=1e-12)
-                        np.testing.assert_allclose(part1.v[idx1,0], part2.v[idx2,0], atol=1e-12)
-                        np.testing.assert_allclose(part1.v[idx1,1], part2.v[idx2,1], atol=1e-12)
-                        np.testing.assert_allclose(part1.v[idx1,2], part2.v[idx2,2], atol=1e-12)
 
-
-
-
-
-
-    def test_L0_particle_number_conservation(self):
-        nbr_part_per_cell=100
-        cells=120
-        time_step_nbr=10
-        time_step=0.001
-
-        # to2d
-        for ndim in [1]:
-            n_particles = nbr_part_per_cell * (cells ** ndim)
-            for interp_order in [1, 2, 3]:
-                diag_outputs=f"phare_L0_particle_number_conservation_{ndim}_{interp_order}"
-                datahier = self.getHierarchy(interp_order, None, "particles", diag_outputs=diag_outputs,
-                                          time_step=time_step, time_step_nbr=time_step_nbr,
-                                          nbr_part_per_cell=nbr_part_per_cell, cells=cells)
-                for time_step_idx in range(time_step_nbr + 1):
-                    coarsest_time =  time_step_idx * time_step
-                    n_particles_at_t = 0
-                    for patch in datahier.level(0, coarsest_time).patches:
-                        n_particles_at_t += patch.patch_datas["protons_particles"].dataset[patch.box].size()
-                    self.assertEqual(n_particles, n_particles_at_t)
-
-
-
-
-
-
+                        self.assertTrue(np.allclose(part1.deltas[idx1], part2.deltas[idx2], atol=1e-12))
+                        self.assertTrue(np.allclose(part1.v[idx1,0], part2.v[idx2,0], atol=1e-12))
+                        self.assertTrue(np.allclose(part1.v[idx1,1], part2.v[idx2,1], atol=1e-12))
+                        self.assertTrue(np.allclose(part1.v[idx1,2], part2.v[idx2,2], atol=1e-12))
 
     @data(
       {"L0": [Box1D(10, 20)]},
@@ -671,35 +623,6 @@ class AdvanceTest(unittest.TestCase):
         dim = refinement_boxes["L0"][0].ndim
         for interp in [1, 2, 3]:
             self._test_field_level_ghosts_via_subcycles_and_coarser_interpolation(dim, interp, refinement_boxes)
-
-
-    @data(
-       ({"L0": {"B0": Box1D(10, 14), "B1": Box1D(15, 19)}}),
-    )
-    def test_hierarchy_timestamp_cadence(self, refinement_boxes):
-        dim = refinement_boxes["L0"]["B0"].ndim
-
-        time_step     = .001
-        # time_step_nbr chosen to force diagnostics dumping double imprecision cadence calculations accuracy testing
-        time_step_nbr = 101
-        final_time    = time_step * time_step_nbr
-
-        for trailing in [0, 1]: # 1 = skip init dumps
-            for i in [2, 3]:
-                timestamps = np.arange(0, final_time, time_step*i)[trailing:]
-
-                diag_outputs=f"phare_outputs_hierarchy_timestamp_cadence_{self.ddt_test_id()}_{i}"
-                hier = self.getHierarchy(interp_order=1, refinement_boxes=refinement_boxes, qty="eb", cells=30,
-                                              diag_outputs=diag_outputs, time_step=time_step,
-                                              time_step_nbr=time_step_nbr, smallest_patch_size=5,
-                                              largest_patch_size=30, timestamps=timestamps)
-
-                time_hier_keys = list(hier.time_hier.keys())
-                self.assertEqual(len(time_hier_keys), len(timestamps))
-
-                for i, timestamp in enumerate(time_hier_keys):
-                    self.assertEqual(hier.format_timestamp(timestamps[i]), timestamp)
-
 
 if __name__ == "__main__":
     unittest.main()

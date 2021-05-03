@@ -63,10 +63,10 @@ class fn_wrapper:
         if is_scalar(ret):
             ret = np.full(len(args[-1]), ret)
 
-        from pybindlibs import cpp
+        from pyphare.cpp import cpp_lib
         # convert numpy array to C++ SubSpan
         # couples vector init functions to C++
-        return cpp.makePyArrayWrapper(ret)
+        return cpp_lib().makePyArrayWrapper(ret)
 
 
 
@@ -159,6 +159,7 @@ def populateDict():
         add_string("simulation/AMR/refinement/tagging/method","none") # integrator.h might want some looking at
 
     add_string("simulation/algo/ion_updater/pusher/name", simulation.particle_pusher)
+    add_size_t("simulation/algo/ion_updater/pusher/threads", 1)
     add_double("simulation/algo/ohm/resistivity", simulation.resistivity)
     add_double("simulation/algo/ohm/hyper_resistivity", simulation.hyper_resistivity)
 
