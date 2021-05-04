@@ -37,6 +37,7 @@ namespace core
         static constexpr std::size_t dimension = dim;
         using type                             = Type;
 
+
         template<typename... Indexes>
         constexpr Point(Indexes... index)
             : r{{index...}}
@@ -135,9 +136,12 @@ namespace core
         std::array<Type, dim> r{};
     };
 
-    template<typename... Indexes>
+    template<typename... Indexes, // block constructor from use if not int/float/etc
+             typename
+             = typename std::enable_if<(true && ... && std::is_arithmetic_v<Indexes>), void>::type>
     Point(Indexes... indexes)
         ->Point<typename std::tuple_element<0, std::tuple<Indexes...>>::type, sizeof...(indexes)>;
+
 
 
 
