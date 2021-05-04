@@ -130,7 +130,6 @@ namespace core
         auto begin() { return r.begin(); }
         auto end() { return r.end(); }
 
-        auto const& operator()() const { return r; }
 
     private:
         std::array<Type, dim> r{};
