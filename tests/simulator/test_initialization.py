@@ -31,7 +31,7 @@ class InitializationTest(unittest.TestCase):
                      beam = False, time_step_nbr=1,
                      smallest_patch_size=10, largest_patch_size=10,
                      cells= 120,
-                     dl=0.1):
+                     dl=0.1, **kwargs):
 
         from pyphare.pharein import global_vars
         global_vars.sim = None
@@ -47,7 +47,8 @@ class InitializationTest(unittest.TestCase):
             interp_order=interp_order,
             refinement_boxes=refinement_boxes,
             diag_options={"format": "phareh5",
-                          "options": {"dir": diag_outputs, "mode":"overwrite"}}
+                          "options": {"dir": diag_outputs, "mode":"overwrite"}},
+            **kwargs
         )
 
         def beam_density(x):
@@ -563,6 +564,11 @@ class InitializationTest(unittest.TestCase):
     def test_has_patch_ghost_on_refined_level_case(self, simInput):
         self._test_patch_ghost_on_refined_level_case(True, **simInput)
 
+
+    @data("berger", "tile")
+    def test_amr_clustering(self, clustering):
+        interp_order = 1
+        datahier = self.getHierarchy(interp_order, {"L0": {"B0": [(10, ), (20, )]}}, "particles", clustering=clustering)
 
 
 

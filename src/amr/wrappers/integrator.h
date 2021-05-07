@@ -7,6 +7,7 @@
 #include <SAMRAI/hier/BoxContainer.h>
 #include <SAMRAI/hier/IntVector.h>
 #include <SAMRAI/hier/PatchHierarchy.h>
+#include <SAMRAI/mesh/TileClustering.h>
 #include <SAMRAI/mesh/BergerRigoutsos.h>
 #include <SAMRAI/mesh/GriddingAlgorithm.h>
 #include <SAMRAI/mesh/StandardTagAndInitialize.h>
@@ -74,9 +75,22 @@ Integrator<_dimension>::Integrator(
     auto standardTag = std::make_shared<SAMRAI::mesh::StandardTagAndInitialize>(
         "StandardTagAndInitialize", tagAndInitStrategy.get(), refineDB);
 
+    auto clustering = [&]() -> std::shared_ptr<SAMRAI::mesh::BoxGeneratorStrategy> {
+        if (!dict["simulation"]["AMR"].contains("clustering"))
+            throw std::runtime_error(std::string{"clustering type not specificed"});
 
-    auto clustering
-        = std::make_shared<SAMRAI::mesh::BergerRigoutsos>(SAMRAI::tbox::Dimension{dimension});
+        auto clustering_type = dict["simulation"]["AMR"]["clustering"].template to<std::string>();
+
+        if (clustering_type == "berger")
+            return std::make_shared<SAMRAI::mesh::BergerRigoutsos>(
+                SAMRAI::tbox::Dimension{dimension});
+
+        if (clustering_type == "tile")
+            return std::make_shared<SAMRAI::mesh::TileClustering>(
+                SAMRAI::tbox::Dimension{dimension});
+
+        throw std::runtime_error(std::string{"Unknown clustering type "} + clustering_type);
+    }();
 
     auto gridding = std::make_shared<SAMRAI::mesh::GriddingAlgorithm>(
         hierarchy, "GriddingAlgorithm", std::shared_ptr<SAMRAI::tbox::Database>{}, standardTag,
