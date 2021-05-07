@@ -29,7 +29,7 @@ int size();
 int rank();
 
 template<typename Data>
-auto mpi_type_for()
+MPI_Datatype mpi_type_for()
 {
     if constexpr (std::is_same_v<double, Data>)
         return MPI_DOUBLE;
@@ -45,7 +45,7 @@ auto mpi_type_for()
         return MPI_UINT64_T;
     else if constexpr (std::is_same_v<char, Data>)
         return MPI_CHAR;
-    
+
     // don't return anything = compile failure if tried to use this function
 }
 
@@ -73,9 +73,9 @@ void _collect_vector(SendBuff const& sendBuff, RcvBuff& rcvBuff, std::vector<int
                      std::vector<int> const& displs, int const mpi_size)
 {
     auto mpi_type = mpi_type_for<Data>();
-    
+
     assert(recvcounts.size() == displs.size() and static_cast<int>(displs.size()) == mpi_size);
-    
+
     MPI_Allgatherv(        // MPI_Allgatherv
         sendBuff.data(),   //   void         *sendbuf,
         sendBuff.size(),   //   int          sendcount,
@@ -85,7 +85,7 @@ void _collect_vector(SendBuff const& sendBuff, RcvBuff& rcvBuff, std::vector<int
         displs.data(),     //   int          *displs,
         mpi_type,          //   MPI_Datatype recvtype,
         MPI_COMM_WORLD     //   MPI_Comm     comm
-    );   
+    );
 }
 
 template<typename Vector>

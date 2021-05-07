@@ -12,6 +12,8 @@
 #include <string>
 #include <memory>
 
+
+
 namespace PHARE::diagnostic::h5
 {
 /*
@@ -61,6 +63,10 @@ public:
         DiagnosticProperties&, Attributes&,
         std::unordered_map<std::size_t, std::vector<std::pair<std::string, Attributes>>>&,
         std::size_t maxLevel) override;
+
+private:
+    // PGI compiler (nvc++ 21.3-0) doesn't like static initializations of arrays
+    std::array<std::string, 5> packer_keys_ = core::packer_keys();
 };
 
 
@@ -93,8 +99,9 @@ void ParticlesDiagnosticWriter<H5Writer>::getDataSetInfo(DiagnosticProperties& d
 
     auto particleInfo = [&](auto& attr, auto& particles) {
         std::size_t part_idx = 0;
+        auto const& keys     = packer_keys_;
         core::apply(Packer::empty(), [&](auto const& arg) {
-            attr[Packer::keys()[part_idx]] = getSize(arg) * particles.size();
+            attr[keys[part_idx]] = getSize(arg) * particles.size();
             ++part_idx;
         });
     };
@@ -139,9 +146,9 @@ void ParticlesDiagnosticWriter<H5Writer>::initDataSets(
         std::string path{h5Writer_.getPatchPathAddTimestamp(lvl, patchID) + "/"};
         std::size_t part_idx = 0;
         core::apply(Packer::empty(), [&](auto const& arg) {
-            createDataSet(path + Packer::keys()[part_idx],
-                          null ? 0 : attr[Packer::keys()[part_idx]].template to<std::size_t>(),
-                          arg);
+            auto const& keys = packer_keys_;
+            createDataSet(path + keys[part_idx],
+                          null ? 0 : attr[keys[part_idx]].template to<std::size_t>(), arg);
             ++part_idx;
         });
         this->writeGhostsAttr_(h5file, path, amr::ghostWidthForParticles<interpOrder>(), null);
@@ -179,11 +186,12 @@ void ParticlesDiagnosticWriter<H5Writer>::write(DiagnosticProperties& diagnostic
         core::ContiguousParticles<dimension> copy{particles.size()};
         packer.pack(copy);
 
-        h5Writer.writeDataSet(h5file, path + packer.keys()[0], copy.weight.data());
-        h5Writer.writeDataSet(h5file, path + packer.keys()[1], copy.charge.data());
-        h5Writer.writeDataSet(h5file, path + packer.keys()[2], copy.iCell.data());
-        h5Writer.writeDataSet(h5file, path + packer.keys()[3], copy.delta.data());
-        h5Writer.writeDataSet(h5file, path + packer.keys()[4], copy.v.data());
+        auto const& keys = packer_keys_;
+        h5Writer.writeDataSet(h5file, path + keys[0], copy.weight.data());
+        h5Writer.writeDataSet(h5file, path + keys[1], copy.charge.data());
+        h5Writer.writeDataSet(h5file, path + keys[2], copy.iCell.data());
+        h5Writer.writeDataSet(h5file, path + keys[3], copy.delta.data());
+        h5Writer.writeDataSet(h5file, path + keys[4], copy.v.data());
     };
 
     auto checkWrite = [&](auto& tree, auto pType, auto& ps) {
@@ -228,7 +236,7 @@ void ParticlesDiagnosticWriter<H5Writer>::writeAttributes(
     writeAttributes_(diagnostic, h5file, fileAttributes, patchAttributes, maxLevel);
 }
 
-
 } // namespace PHARE::diagnostic::h5
+
 
 #endif /* PHARE_DIAGNOSTIC_DETAIL_TYPES_PARTICLE_H */
