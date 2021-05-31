@@ -44,7 +44,8 @@ namespace amr
          * the destination, after that we have to tell how the sourceMask should be transformed
          * to intersect it with the destination box (for example: when using periodics boundary,
          * the mask will be shifted).
-         * Finaly we can also add some restrictions on the boxes for the destination.
+         * Finally we can also add some restrictions on the boxes for the destination.
+         * overwriteInterior is reset to false to ignore shared primal border nodes
          */
         std::shared_ptr<SAMRAI::hier::BoxOverlap> calculateOverlap(
             SAMRAI::hier::BoxGeometry const& destinationGeometry,
