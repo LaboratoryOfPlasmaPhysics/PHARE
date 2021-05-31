@@ -501,22 +501,19 @@ class InitializationTest(unittest.TestCase):
 
 
 
+
+
     def _test_nbr_particles_per_cell_is_as_provided(self, dim, interp_order, default_ppc=100):
         ddt_test_id = self.ddt_test_id()
         datahier = self.getHierarchy(interp_order, {"L0": {"B0": nDBox(dim, 10, 20)}}, "particles", ndim=dim,
                       diag_outputs=f"ppc/{dim}/{interp_order}/{ddt_test_id}")
 
-
-    @data(1, 2, 3)
-    def test_nbr_particles_per_cell_is_as_provided(self, interp_order):
-        print(self._testMethodName)
-        ppc = 100
-        datahier = self.getHierarchy(interp_order, {"L0": {"B0": [(10, ), (20, )]}}, "particles")
         for patch in datahier.level(0).patches:
             pd = patch.patch_datas["protons_particles"]
             icells = pd.dataset[patch.box].iCells
             H, edges = np.histogramdd(icells)
-            self.assertTrue((H == ppc).all())
+            self.assertTrue((H == default_ppc).all())
+
 
 
 
@@ -535,6 +532,8 @@ class InitializationTest(unittest.TestCase):
             ]) # including patch ghost particles means duplicates
             for pop_name, patchDatas in particlePatchDatas.items()
         }
+
+
 
     def _test_domainparticles_have_correct_split_from_coarser_particle(self, ndim, interp_order, refinement_boxes, **kwargs):
         print("test_domainparticles_have_correct_split_from_coarser_particle for dim/interp : {}/{}".format(ndim, interp_order))
