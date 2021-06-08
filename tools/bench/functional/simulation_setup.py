@@ -41,10 +41,10 @@ def _vthz(*xyz):
 
 
 def setup(**kwargs):
+    from pyphare.pharein.simulation import _print, check_time, check_patch_size, check_domain
     from pyphare.pharein import Simulation, MaxwellianFluidModel
     from pyphare.pharein import ElectronModel, ElectromagDiagnostics, FluidDiagnostics
     import matplotlib as mpl
-
     mpl.use("Agg")
 
     def getFn(key):
@@ -55,26 +55,27 @@ def setup(**kwargs):
     vx, vy, vz = getFn("vx"), getFn("vy"), getFn("vz")
     vthx, vthy, vthz = getFn("vthx"), getFn("vthy"), getFn("vthz")
 
-
     ndim = kwargs.get("ndim", 1)
-    interp = kwargs.get("ndim", 1)
-    smallest_patch_size = kwargs.get("smallest_patch_size", 20)
-    largest_patch_size = kwargs.get("largest_patch_size", 20)
-    time_step_nbr = kwargs.get("time_step_nbr", 100)
-    final_time = kwargs.get("final_time", 0.1)
-    cells = [kwargs.get("cells", 100)] * ndim
-    dl = [kwargs.get("dl", 0.2)] * ndim
+    interp = kwargs.get("interp_order", 1)
+
+    dl, cells = check_domain(**kwargs)
+    kwargs["dl"] = dl
+    kwargs["cells"] =  cells
+    largest_patch_size, smallest_patch_size = check_patch_size(**kwargs)
+
     Te = kwargs.get("Te", 0.12)
     charge = kwargs.get("charge", 1)
     ppc = kwargs.get("ppc", 10)
     boundary_types = [kwargs.get("boundary_types", "periodic")] * ndim
     diag_dir = kwargs.get("diag_dir", ".")
 
-    Simulation(
+    _, time_step, final_time = check_time(**kwargs)
+
+    _print(Simulation(
         interp_order=interp,
         smallest_patch_size=smallest_patch_size,
         largest_patch_size=largest_patch_size,
-        time_step_nbr=time_step_nbr,
+        time_step=time_step,
         final_time=final_time,
         boundary_types=boundary_types,
         cells=cells,
@@ -83,7 +84,9 @@ def setup(**kwargs):
             "format": "phareh5",
             "options": {"dir": diag_dir, "mode": "overwrite"},
         },
-    )
+        **kwargs.get("kwargs", {})
+    ))
+
     MaxwellianFluidModel(
         bx=bx,
         by=by,
