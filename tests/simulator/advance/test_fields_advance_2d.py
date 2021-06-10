@@ -50,7 +50,7 @@ class AdvanceTest(AdvanceTestBase):
         self._test_overlaped_fields_are_equal(time_step, time_step_nbr, datahier)
 
 
-    @data( # see below
+    @data(
        *per_interp(({"L0": {"B0": Box2D(10, 14)}})),
        *per_interp(({"L0": {"B0": Box2D(10, 14), "B1": Box2D(15, 19)}})),
        *per_interp(({"L0": {"B0": Box2D(6, 23)}})),
@@ -64,15 +64,14 @@ class AdvanceTest(AdvanceTestBase):
         self._test_field_coarsening_via_subcycles(ndim, interp_order, refinement_boxes, dl=.3)
 
 
-    # ## needs update in test_refine_field.py::refine
-    # @data( # only supports a hierarchy with 2 levels
-    #    *per_interp(({"L0": [Box2D(5, 9)]})),
-    #    *per_interp(({"L0": [Box2D(5, 24)]})),
-    #    *per_interp(({"L0": [Box2D(5, 9), Box2D(20, 24)]})),
-    # )
-    # @unpack
-    # def test_field_level_ghosts_via_subcycles_and_coarser_interpolation(self, interp_order, refinement_boxes):
-    #     self._test_field_level_ghosts_via_subcycles_and_coarser_interpolation(ndim, interp_order, refinement_boxes)
+    @data( # only supports a hierarchy with 2 levels
+       *per_interp(({"L0": [Box2D(5, 9)]})),
+       *per_interp(({"L0": [Box2D(5, 24)]})),
+       *per_interp(({"L0": [Box2D(5, 9), Box2D(20, 24)]})),
+    )
+    @unpack
+    def test_field_level_ghosts_via_subcycles_and_coarser_interpolation(self, interp_order, refinement_boxes):
+        self._test_field_level_ghosts_via_subcycles_and_coarser_interpolation(ndim, interp_order, refinement_boxes)
 
 
 if __name__ == "__main__":

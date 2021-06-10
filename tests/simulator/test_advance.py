@@ -75,8 +75,8 @@ class AdvanceTestBase(unittest.TestCase):
             return np.asarray([_(i) for i,v in enumerate(xyz)]).prod(axis=0)
 
         def bz(*xyz):
-            if len(xyz) > 1:
-                return 1
+            # if len(xyz) > 1:
+            #     return 1
             # from pyphare.pharein.global_vars import sim
             # L = sim.simulation_domain()
             # _ = lambda i: 0.1*np.sin(2*np.pi*xyz[i]/L[i])
