@@ -66,7 +66,7 @@ class AdvanceTest(AdvanceTestBase):
 
     @data( # only supports a hierarchy with 2 levels
        *per_interp(({"L0": [Box2D(5, 9)]})),
-       *per_interp(({"L0": [Box2D(5, 24)]})),
+       *per_interp(({"L0": [Box2D(5, 19), Box2D(20, 24)]})),
        *per_interp(({"L0": [Box2D(5, 9), Box2D(20, 24)]})),
     )
     @unpack

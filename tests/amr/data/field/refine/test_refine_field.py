@@ -34,11 +34,6 @@ def refine(field, **kwargs):
     )
     fine_data = np.zeros(fine_box.shape + primal_directions + (field.ghosts_nbr * 2))
 
-    print("fine_box.shape", fine_box.shape)
-    print("primal_directions", primal_directions)
-    print("data.shape", data.shape)
-    print("fine_data.shape", fine_data.shape)
-
     ghostX = field.ghosts_nbr[0]
     assert ghostX > 0
 

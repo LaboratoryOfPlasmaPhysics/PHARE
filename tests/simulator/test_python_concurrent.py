@@ -21,15 +21,15 @@ from tests.simulator.advance.test_particles_advance_2d import AdvanceTest as Adv
 if __name__ == "__main__":
 
     test_classes_to_run = [
-      SimulatorValidation,
-      InitField1d,
-      InitParticles1d,
-      AdvanceField1d,
-      AdvanceParticles1d,
-      InitField2d,
-      InitParticles2d,
+      # SimulatorValidation,
+      # InitField1d,
+      # InitParticles1d,
+      # AdvanceField1d,
+      # AdvanceParticles1d,
+      # InitField2d,
+      # InitParticles2d,
       AdvanceField2d,
-      AdvanceParticles2d
+      # AdvanceParticles2d
     ]
 
     loader = unittest.TestLoader()

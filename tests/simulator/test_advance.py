@@ -61,56 +61,34 @@ class AdvanceTestBase(unittest.TestCase):
             return 0.5*(1+np.tanh((x-x0)/l))
 
         def bx(*xyz):
-            if isinstance(xyz[0], np.ndarray):
-                print("bx xyz[0].shape", xyz[0].shape)
             return 1.
 
 
         def by(*xyz):
-            # if len(xyz) > 1:
-            #     return 1
             from pyphare.pharein.global_vars import sim
             L = sim.simulation_domain()
             _ = lambda i: 0.1*np.cos(2*np.pi*xyz[i]/L[i])
             return np.asarray([_(i) for i,v in enumerate(xyz)]).prod(axis=0)
 
         def bz(*xyz):
-            # if len(xyz) > 1:
-            #     return 1
-            # from pyphare.pharein.global_vars import sim
-            # L = sim.simulation_domain()
-            # _ = lambda i: 0.1*np.sin(2*np.pi*xyz[i]/L[i])
-            # return np.asarray([_(i) for i,v in enumerate(xyz)]).prod(axis=0)
-            if isinstance(xyz[0], np.ndarray):
-                print("bz xyz[0].shape", xyz[0].shape)
             from pyphare.pharein.global_vars import sim
             L = sim.simulation_domain()
             _ = lambda i: 0.1*np.cos(2*np.pi*xyz[i]/L[i])
             return np.asarray([_(i) for i,v in enumerate(xyz)]).prod(axis=0)
 
         def vx(*xyz):
-            if len(xyz) > 1:
-                return 0
             from pyphare.pharein.global_vars import sim
             L = sim.simulation_domain()
             _ = lambda i: 0.1*np.cos(2*np.pi*xyz[i]/L[i])
             return np.asarray([_(i) for i,v in enumerate(xyz)]).prod(axis=0)
 
         def vy(*xyz):
-            if len(xyz) > 1:
-                return 0
             from pyphare.pharein.global_vars import sim
             L = sim.simulation_domain()
             _ = lambda i: 0.1*np.cos(2*np.pi*xyz[i]/L[i])
             return np.asarray([_(i) for i,v in enumerate(xyz)]).prod(axis=0)
 
         def vz(*xyz):
-            if len(xyz) > 1:
-                return 0
-            # from pyphare.pharein.global_vars import sim
-            # L = sim.simulation_domain()
-            # _ = lambda i: 0.1*np.sin(2*np.pi*xyz[i]/L[i])
-            # return np.asarray([_(i) for i,v in enumerate(xyz)]).prod(axis=0)
             from pyphare.pharein.global_vars import sim
             L = sim.simulation_domain()
             _ = lambda i: 0.1*np.cos(2*np.pi*xyz[i]/L[i])
