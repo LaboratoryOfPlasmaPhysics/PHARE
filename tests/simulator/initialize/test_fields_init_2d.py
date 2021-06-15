@@ -24,10 +24,10 @@ class InitializationTest(InitializationTest):
         print(f"\n{self._testMethodName}_{ndim}d")
         self._test_bulkvel_is_as_provided_by_user(ndim, interp_order)
 
-    # @data(*interp_orders)
-    # def test_density_is_as_provided_by_user(self, interp_order): ## need to verify ppc / results - NEEDS RAM
-    #     print(f"\n{self._testMethodName}_{ndim}d")
-    #     self._test_density_is_as_provided_by_user(ndim, interp_order)
+    @data(*interp_orders)
+    def test_density_is_as_provided_by_user(self, interp_order):
+        print(f"\n{self._testMethodName}_{ndim}d")
+        self._test_density_is_as_provided_by_user(ndim, interp_order)
 
     @data(*interp_orders)
     def test_density_decreases_as_1overSqrtN(self, interp_order):
