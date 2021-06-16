@@ -87,13 +87,16 @@ class DiagnosticsTest(unittest.TestCase):
         startMPI()
         self.simulator = None
 
+
     def tearDown(self):
         if self.simulator is not None:
             self.simulator.reset()
         self.simulator = None
 
+
     def ddt_test_id(self):
         return self._testMethodName.split("_")[-1]
+
 
     def test_dump_diags_timestamps(self):
         print("test_dump_diags dim/interp:{}/{}".format(1, 1))
@@ -142,19 +145,37 @@ class DiagnosticsTest(unittest.TestCase):
 
         for trailing in [0, 1]: # 1 = skip init dumps
             for i in [2, 3]:
-                timestamps = np.arange(0, final_time, time_step*i)[trailing:]
-
+                simInput = simArgs.copy()
                 diag_outputs=f"phare_outputs_hierarchy_timestamp_cadence_{dim}_{self.ddt_test_id()}_{i}"
-                hier = self.getHierarchy(interp_order=1, refinement_boxes=refinement_boxes, qty="eb", cells=30,
-                                              diag_outputs=diag_outputs, time_step=time_step,
-                                              time_step_nbr=time_step_nbr, smallest_patch_size=5,
-                                              largest_patch_size=30, timestamps=timestamps, ndim=dim)
+                simInput["diag_options"]["options"]["dir"] = diag_outputs
+                simInput["time_step_nbr"] = time_step_nbr
 
-                time_hier_keys = list(hier.time_hier.keys())
-                self.assertEqual(len(time_hier_keys), len(timestamps))
+                ph.global_vars.sim = None
+                simulation = ph.Simulation(**simInput)
+                setup_model(10)
 
-                for i, timestamp in enumerate(time_hier_keys):
-                    self.assertEqual(hier.format_timestamp(timestamps[i]), timestamp)
+                timestamps = np.arange(0, final_time, time_step*i)[trailing:]
+                for quantity in ["B"]:
+                    ElectromagDiagnostics(
+                        quantity=quantity,
+                        write_timestamps=timestamps,
+                        compute_timestamps=timestamps,
+                        flush_every=ElectromagDiagnostics.h5_flush_never,
+                    )
+
+                Simulator(simulation).run()
+
+                for diagInfo in simulation.diagnostics:
+                    h5_filename = os.path.join(diag_outputs, h5_filename_from(diagInfo))
+                    self.assertTrue(os.path.exists(h5_filename))
+
+                    hier = hierarchy_from(h5_filename=h5_filename)
+
+                    time_hier_keys = list(hier.time_hier.keys())
+                    self.assertEqual(len(time_hier_keys), len(timestamps))
+
+                    for i, timestamp in enumerate(time_hier_keys):
+                        self.assertEqual(hier.format_timestamp(timestamps[i]), timestamp)
 
 
 
