@@ -230,12 +230,8 @@ class AdvanceTestBase(unittest.TestCase):
                             slice1 = data1[loc_b1.lower[0]:loc_b1.upper[0] + 1, loc_b1.lower[1]:loc_b1.upper[1] + 1]
                             slice2 = data2[loc_b2.lower[0]:loc_b2.upper[0] + 1, loc_b2.lower[1]:loc_b2.upper[1] + 1]
 
-                        try:
-                            # np.testing.assert_equal(slice1, slice2)
-                            np.testing.assert_allclose(slice1, slice2, atol=1e-16)
-                        except AssertionError as e:
-                            print("error", coarsest_time, overlap, e)
-                            # raise e
+                        np.testing.assert_allclose(slice1, slice2, atol=1e-16)
+
 
         self.assertGreater(check, time_step_nbr)
         self.assertEqual(check % time_step_nbr, 0)
