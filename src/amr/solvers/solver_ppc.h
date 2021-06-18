@@ -555,29 +555,13 @@ void SolverPPC<HybridModel, AMR_Types>::moveIons_(level_t& level, Ions& ions,
         }
     }
 
-    auto copyField = [](auto const& component) {
-        return std::vector<double>(component.data(), component.data() + component.size());
-    };
 
-    std::unordered_map<std::string, std::vector<std::vector<double>>> vvv;
-    std::unordered_map<std::string, std::vector<double>> nnn;
 
     auto dt = newTime - currentTime;
+
     for (auto& patch : level)
     {
         auto _ = rm.setOnPatch(*patch, electromag, ions);
-
-        auto& v3 = ions.velocity();
-
-        std::stringstream ss;
-        ss << patch->getGlobalId();
-        vvv.emplace(ss.str(), std::vector<std::vector<double>>{});
-
-        vvv[ss.str()].emplace_back(copyField(v3.getComponent(core::Component::X)));
-        vvv[ss.str()].emplace_back(copyField(v3.getComponent(core::Component::Y)));
-        vvv[ss.str()].emplace_back(copyField(v3.getComponent(core::Component::Z)));
-
-        nnn.emplace(ss.str(), copyField(ions.density()));
 
         auto layout = PHARE::amr::layoutFromPatch<GridLayout>(*patch);
         ionUpdater_.updatePopulations(ions, electromag, layout, dt, mode);
@@ -585,6 +569,7 @@ void SolverPPC<HybridModel, AMR_Types>::moveIons_(level_t& level, Ions& ions,
         // this needs to be done before calling the messenger
         rm.setTime(ions, *patch, newTime);
     }
+
 
     fromCoarser.fillIonGhostParticles(ions, level, newTime);
     fromCoarser.fillIonMomentGhosts(ions, level, currentTime, newTime);
