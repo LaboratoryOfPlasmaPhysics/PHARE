@@ -358,7 +358,7 @@ class InitializationTest(unittest.TestCase):
 
 
     def _test_density_is_as_provided_by_user(self, dim, interp_order):
-        nbParts = {1 : 10000, 2: 1414} # 1414 = 10000 * sqrt(2) / 10
+        nbParts = {1 : 10000, 2: 1000}
         print("test_density_is_as_provided_by_user : interp_order : {}".format(interp_order))
         hier = self.getHierarchy(interp_order, {"L0": {"B0": nDBox(dim, 10, 20)}},
                                  qty="moments", nbr_part_per_cell=nbParts[dim], beam=True, ndim=dim,
@@ -423,7 +423,7 @@ class InitializationTest(unittest.TestCase):
 
                     for name,dev in devs.items():
                         print("sigma(user density - {} density) = {}".format(name, dev))
-                        self.assertLess(dev, 2e-2, '{} has dev = {}'.format(name, dev))  # empirical value obtained from test prints
+                        self.assertLess(dev, 3e-2, '{} has dev = {}'.format(name, dev))  # empirical value obtained from test prints
 
 
 

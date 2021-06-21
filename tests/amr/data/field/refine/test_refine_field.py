@@ -2,6 +2,7 @@ import numpy as np
 
 from pyphare.core import box as boxm
 from pyphare.core.gridlayout import GridLayout
+from pyphare.core.phare_utilities import refinement_ratio
 from pyphare.pharesee.hierarchy import FieldData
 
 
@@ -38,6 +39,7 @@ def refine(field, **kwargs):
     assert ghostX > 0
 
     cadence = 2
+    assert cadence == refinement_ratio
 
     if field.box.ndim == 1:
         if primal_directions[0]:

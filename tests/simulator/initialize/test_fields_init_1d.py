@@ -1,3 +1,8 @@
+"""
+  This file exists independently from test_initialization.py to isolate dimension
+    test cases and allow each to be overridden in some way if required.
+"""
+
 import unittest
 from ddt import ddt, data, unpack
 from pyphare.core.box import Box, Box1D, nDBox

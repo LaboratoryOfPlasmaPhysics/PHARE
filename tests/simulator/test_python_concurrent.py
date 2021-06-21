@@ -1,3 +1,9 @@
+"""
+  This script exists to minimize testing time by running all simulation/tests
+    concurrently without needing to wait for any particular file or set of tests
+
+  requirements: concurrencytest
+"""
 
 import os
 import unittest

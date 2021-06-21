@@ -492,7 +492,7 @@ class AdvanceTestBase(unittest.TestCase):
                                         assert refinedInterpGhostBox_data.shape == fine_subcycle_pd.ghosts_nbr
                                         assert fine_ghostbox_data.shape == fine_subcycle_pd.ghosts_nbr
 
-                                    np.testing.assert_allclose(fine_ghostbox_data, refinedInterpGhostBox_data, atol=1e-7)
+                                    np.testing.assert_allclose(fine_ghostbox_data, refinedInterpGhostBox_data, atol=1e-15)
                                     checks += 1
 
         self.assertGreater(checks, len(refinement_boxes["L0"]) * len(quantities))

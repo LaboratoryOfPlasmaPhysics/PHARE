@@ -7,7 +7,7 @@ def timestamps_with_step(sim, dump_step):
 
 def all_timestamps(sim):
     import numpy as np
-    nbr_dump_step = sim.final_time / sim.time_step + 1
+    nbr_dump_step = int(sim.final_time / sim.time_step) + 1
     return sim.time_step * np.arange(nbr_dump_step)
 
 
