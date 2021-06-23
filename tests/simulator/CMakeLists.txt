@@ -17,9 +17,6 @@ if(HighFive)
   phare_mpi_python3_exec(9 3 diagnostics test_diagnostics.py  ${CMAKE_CURRENT_BINARY_DIR})
   phare_mpi_python3_exec(9 4 diagnostics test_diagnostics.py  ${CMAKE_CURRENT_BINARY_DIR})
 
-  phare_python3_exec(9 initialization  test_initialization.py  ${CMAKE_CURRENT_BINARY_DIR})
-  phare_python3_exec(9 advancement     test_advance.py         ${CMAKE_CURRENT_BINARY_DIR})
-
   phare_python3_exec(11, test_diagnostic_timestamps test_diagnostic_timestamps.py ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 

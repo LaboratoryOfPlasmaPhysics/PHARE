@@ -1,14 +1,11 @@
 """
   This script exists to minimize testing time by running all simulation/tests
     concurrently without needing to wait for any particular file or set of tests
-
-  requirements: concurrencytest
 """
 
 import os
 import unittest
-
-from concurrencytest import ConcurrentTestSuite, fork_for_tests
+import multiprocessing
 
 from tests.simulator.test_validation import SimulatorValidation
 
@@ -24,6 +21,13 @@ from tests.simulator.initialize.test_particles_init_2d import InitializationTest
 from tests.simulator.advance.test_fields_advance_2d import AdvanceTest as AdvanceField2d
 from tests.simulator.advance.test_particles_advance_2d import AdvanceTest as AdvanceParticles2d
 
+
+N_CORES = int(os.environ["N_CORES"]) if "N_CORES" in os.environ else multiprocessing.cpu_count()
+MPI_RUN = int(os.environ["MPI_RUN"]) if "MPI_RUN" in os.environ else 1
+
+def test_cmd(clazz, test_id):
+    return f"mpirun -n {MPI_RUN} python3 -m {clazz.__module__} {clazz.__name__}.{test_id}"
+
 if __name__ == "__main__":
 
     test_classes_to_run = [
@@ -38,13 +42,11 @@ if __name__ == "__main__":
       AdvanceParticles2d
     ]
 
+    tests = []
     loader = unittest.TestLoader()
-
-    suite = unittest.TestSuite()
     for test_class in test_classes_to_run:
-        suite.addTest(loader.loadTestsFromTestCase(test_class))
+        for suite in loader.loadTestsFromTestCase(test_class):
+            tests += [test_cmd(type(suite), suite._testMethodName)]
 
-    import multiprocessing
-
-    N_CORES = int(os.environ["N_CORES"]) if "N_CORES" in os.environ else multiprocessing.cpu_count()
-    unittest.TextTestRunner().run(ConcurrentTestSuite(suite, fork_for_tests(N_CORES)))
+    from tools.python3 import run_mp
+    run_mp(tests, N_CORES, check=True)

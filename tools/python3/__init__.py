@@ -16,15 +16,18 @@ def run(cmd, shell=True, capture_output=True, check=False, print_cmd=True, **kwa
         print(f"run failed with error: {e}\n\t{e.stdout}\n\t{e.stderr} ")
         raise RuntimeError(decode_bytes(e.stderr))
 
-def run_mp(cmds):
+def run_mp(cmds, N_CORES=None, **kwargs):
     """
-    spawns len(cmds) threads running all commands at once and waiting for results
+    spawns N_CORES threads (default=len(cmds)) running commands and waiting for results
     https://docs.python.org/3/library/concurrent.futures.html
     """
     import concurrent.futures
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(cmds)) as executor:
-        jobs = [executor.submit(run, cmd) for cmd in cmds]
+    if N_CORES is None:
+        N_CORES = len(cmds)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=N_CORES) as executor:
+        jobs = [executor.submit(run, cmd, **kwargs) for cmd in cmds]
         results = []
         for future in concurrent.futures.as_completed(jobs):
             try:

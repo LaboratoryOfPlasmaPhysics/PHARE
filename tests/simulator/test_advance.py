@@ -249,7 +249,7 @@ class AdvanceTestBase(unittest.TestCase):
 
         time_step_nbr=3
         time_step=0.001
-        diag_outputs=f"phare_overlapped_particledatas_have_identical_particles/{ndim}/{self.ddt_test_id()}"
+        diag_outputs=f"phare_overlapped_particledatas_have_identical_particles/{ndim}/{interp_order}/{self.ddt_test_id()}"
         datahier = self.getHierarchy(interp_order, refinement_boxes, "particles", diag_outputs=diag_outputs, ndim=ndim,
                                       time_step=time_step, time_step_nbr=time_step_nbr, nbr_part_per_cell=ppc, **kwargs)
 
@@ -437,9 +437,9 @@ class AdvanceTestBase(unittest.TestCase):
             for t in ts:
                 self.assertIn(L0L1_datahier.format_timestamp(t), L0L1_datahier.times())
 
-        L0_datahier = _getHier(f"phare_lvl_ghost_interpolation_L0_diags_{self.ddt_test_id()}")
+        L0_datahier = _getHier(f"phare_lvl_ghost_interpolation_L0_diags/{ndim}/{interp_order}/{self.ddt_test_id()}")
         L0L1_datahier = _getHier(
-          f"phare_lvl_ghost_interpolation_L0L1_diags_{self.ddt_test_id()}", refinement_boxes
+          f"phare_lvl_ghost_interpolation_L0L1_diags/{ndim}/{interp_order}/{self.ddt_test_id()}", refinement_boxes
         )
 
         lvl_steps = global_vars.sim.level_time_steps
