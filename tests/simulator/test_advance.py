@@ -25,10 +25,14 @@ class AdvanceTestBase(unittest.TestCase):
         return self._testMethodName.split("_")[-1]
 
 
+
     def _density(*xyz):
-        # x = xyz[0]
-        # return 0.3 + 1./np.cosh((x-6)/4.)**2
-        return 1
+        from pyphare.pharein.global_vars import sim
+        hL = np.array(sim.simulation_domain()) / 2
+        _ = lambda i: -(xyz[i]-hL[i]) ** 2
+        return .3 + np.exp(sum([_(i) for i,v in enumerate(xyz)]))
+
+
 
     def getHierarchy(self, interp_order, refinement_boxes, qty,
                      diag_outputs, nbr_part_per_cell=100, density = _density,

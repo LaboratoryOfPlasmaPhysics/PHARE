@@ -33,9 +33,13 @@ class InitializationTest(unittest.TestCase):
     def ddt_test_id(self):
         return self._testMethodName.split("_")[-1]
 
+
     def _density(*xyz):
-        x = xyz[0]
-        return 0.3 + 1./np.cosh((x-6)/4.)**2
+        from pyphare.pharein.global_vars import sim
+        hL = np.array(sim.simulation_domain()) / 2
+        _ = lambda i: -(xyz[i]-hL[i]) ** 2
+        return .3 + np.exp(sum([_(i) for i,v in enumerate(xyz)]))
+
 
 
     def getHierarchy(self, interp_order, refinement_boxes, qty,
@@ -354,6 +358,8 @@ class InitializationTest(unittest.TestCase):
 
                     for vexp, vact in zip((vxexp, vyexp, vzexp), (vxact, vyact, vzact)):
                         self.assertTrue(np.std(vexp-vact) < 1e-2)
+
+
 
 
 
